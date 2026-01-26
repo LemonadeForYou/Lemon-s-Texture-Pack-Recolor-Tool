@@ -2,98 +2,172 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bedrock Texture Pack Recolor Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bedrock Recolor Studio</title>
 
-<!-- JSZip -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
 :root {
-  --glass: rgba(255,255,255,0.08);
-  --border: rgba(255,255,255,0.18);
-  --accent: #00ffd5;
+  --bg: #070707;
+  --glass: rgba(255, 215, 0, 0.08);
+  --border: rgba(255, 215, 0, 0.25);
+  --accent: #ffd700;
+  --accent-soft: #ffea80;
+  --text-dim: rgba(255,255,255,0.7);
 }
 
-* { box-sizing: border-box; font-family: Inter, sans-serif; }
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #0f2027, #000);
+  background:
+    radial-gradient(circle at top, #1a1405, var(--bg));
   color: white;
   overflow-x: hidden;
 }
 
-/* Animated tech background */
+/* TECH GRID */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(0,255,213,.08) 1px, transparent 1px),
-    linear-gradient(rgba(0,255,213,.08) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: move 20s linear infinite;
-  z-index: -1;
+    linear-gradient(transparent 96%, rgba(255,215,0,.05)),
+    linear-gradient(90deg, transparent 96%, rgba(255,215,0,.05));
+  background-size: 28px 28px;
+  z-index: -2;
 }
 
-@keyframes move {
-  from { background-position: 0 0; }
-  to { background-position: 400px 400px; }
+/* GLOW ORBS */
+.orb {
+  position: fixed;
+  width: 280px;
+  height: 280px;
+  filter: blur(120px);
+  opacity: 0.35;
+  z-index: -1;
+  animation: float 14s ease-in-out infinite alternate;
+}
+.orb.yellow {
+  background: var(--accent);
+  top: -100px;
+  left: -80px;
+}
+.orb.gold {
+  background: #ffb300;
+  bottom: -120px;
+  right: -80px;
+}
+
+@keyframes float {
+  from { transform: translateY(0); }
+  to { transform: translateY(50px); }
 }
 
 header {
-  padding: 20px;
+  padding: 18px;
   text-align: center;
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 20px;
-}
-
-/* Glass panels */
-.panel {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+main {
   padding: 16px;
-  backdrop-filter: blur(12px);
+  max-width: 520px;
+  margin: auto;
 }
 
+/* GLASS CARD */
+.card {
+  background: linear-gradient(
+    180deg,
+    rgba(255,215,0,0.14),
+    rgba(255,215,0,0.04)
+  );
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 16px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 0 0 1px rgba(255,215,0,0.08) inset,
+    0 20px 40px rgba(0,0,0,0.4);
+}
+
+h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+input,
+select,
 button {
   width: 100%;
-  margin-top: 8px;
-  padding: 10px;
-  background: linear-gradient(135deg, var(--accent), #00aaff);
-  border: none;
-  border-radius: 10px;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
+  margin-top: 10px;
 }
 
 input[type="file"],
 input[type="text"],
-input[type="color"],
+select {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  color: white;
+}
+
 input[type="range"] {
-  width: 100%;
-  margin-top: 6px;
+  accent-color: var(--accent);
 }
 
+label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+button {
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(
+    135deg,
+    var(--accent),
+    var(--accent-soft)
+  );
+  color: #000;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  box-shadow: 0 8px 20px rgba(255,215,0,0.35);
+}
+
+button.secondary {
+  background: rgba(255,215,0,0.1);
+  color: white;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+/* FOLDERS */
 .folder {
-  padding: 6px;
-  cursor: pointer;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,215,0,0.08);
+  margin-top: 8px;
+  text-align: center;
+  font-weight: 600;
 }
-.folder:hover { background: rgba(255,255,255,0.1); }
-.folder.active { background: rgba(0,255,213,0.25); }
 
+.folder.active {
+  outline: 2px solid var(--accent);
+  box-shadow: 0 0 20px rgba(255,215,0,0.4);
+}
+
+/* PREVIEW */
 .preview {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -103,160 +177,69 @@ input[type="range"] {
 .preview img {
   width: 100%;
   image-rendering: pixelated;
-  background: #111;
-  border-radius: 10px;
+  background: #000;
+  border-radius: 16px;
   padding: 8px;
+  border: 1px solid var(--border);
 }
 
-.small {
-  font-size: 12px;
-  opacity: 0.7;
+/* STICKY CONTROLS */
+.controls {
+  position: sticky;
+  bottom: 12px;
 }
 </style>
 </head>
 
 <body>
-<header>🎨 Minecraft Bedrock Texture Pack Recolor Tool</header>
 
-<div class="container">
+<div class="orb yellow"></div>
+<div class="orb gold"></div>
 
-<!-- LEFT PANEL -->
-<div class="panel">
-  <input type="file" id="fileInput" accept=".zip,.mcpack">
+<header>⚡ Bedrock Recolor Studio</header>
 
-  <input type="text" id="search" placeholder="🔍 Search texture">
+<main>
 
-  <h4>Folders</h4>
-  <div id="folders"></div>
-
-  <h4>Color</h4>
-  <input type="color" id="picker">
-  <input type="text" id="hex" placeholder="#00ffd5">
-
-  <label>Hue</label>
-  <input type="range" id="hue" min="-180" max="180" value="0">
-  <label>Saturation</label>
-  <input type="range" id="sat" min="0" max="200" value="100">
-  <label>Brightness</label>
-  <input type="range" id="bri" min="0" max="200" value="100">
-
-  <button onclick="applyRecolor()">Apply Recolor</button>
-  <button onclick="undo()">Undo</button>
-  <button onclick="resetAll()">Reset</button>
-
-  <button onclick="savePreset()">Save Preset</button>
-  <select id="presets" onchange="loadPreset()"></select>
-
-  <button onclick="download()">Download MCPACK</button>
+<div class="card">
+  <input type="file" accept=".zip,.mcpack">
+  <input type="text" placeholder="🔍 Search texture">
 </div>
 
-<!-- RIGHT PANEL -->
-<div class="panel">
+<div class="card">
+  <h3>Folders</h3>
+  <div class="folder active">Blocks</div>
+  <div class="folder">Items</div>
+  <div class="folder">Entity</div>
+  <div class="folder">UI</div>
+</div>
+
+<div class="card">
   <h3>Live Preview</h3>
   <div class="preview">
-    <div>
-      <div class="small">Before</div>
-      <img id="before">
-    </div>
-    <div>
-      <div class="small">After</div>
-      <img id="after">
-    </div>
+    <img src="">
+    <img src="">
   </div>
 </div>
 
+<div class="card controls">
+  <input type="color" value="#ffd700">
+  <input type="text" value="#ffd700">
+
+  <label>Hue</label>
+  <input type="range" min="-180" max="180">
+
+  <label>Saturation</label>
+  <input type="range" min="0" max="200" value="100">
+
+  <label>Brightness</label>
+  <input type="range" min="0" max="200" value="100">
+
+  <button>Apply Recolor</button>
+  <button class="secondary">Undo</button>
+  <button class="secondary">Reset</button>
+  <button>Download MCPACK</button>
 </div>
 
-<script>
-let zip, files = [], history = [], currentFolder = "";
-
-fileInput.onchange = async e => {
-  zip = await JSZip.loadAsync(e.target.files[0]);
-  files = Object.keys(zip.files).filter(f => f.endsWith(".png"));
-  renderFolders();
-};
-
-function renderFolders() {
-  const map = {};
-  files.forEach(f => {
-    const key = f.split("/")[0];
-    map[key] = true;
-  });
-  folders.innerHTML = Object.keys(map).map(f =>
-    `<div class="folder" onclick="selectFolder('${f}', this)">${f}</div>`
-  ).join("");
-}
-
-function selectFolder(f, el) {
-  document.querySelectorAll(".folder").forEach(x => x.classList.remove("active"));
-  el.classList.add("active");
-  currentFolder = f;
-  loadPreview();
-}
-
-async function loadPreview() {
-  const file = files.find(f => f.startsWith(currentFolder));
-  if (!file) return;
-  const blob = await zip.file(file).async("blob");
-  before.src = URL.createObjectURL(blob);
-  after.src = before.src;
-}
-
-function applyRecolor() {
-  history.push(JSON.stringify(zip.files));
-  files.forEach(async f => {
-    if (!f.startsWith(currentFolder)) return;
-    const img = new Image();
-    img.src = URL.createObjectURL(await zip.file(f).async("blob"));
-    img.onload = () => recolor(img, f);
-  });
-}
-
-function recolor(img, path) {
-  const c = document.createElement("canvas");
-  c.width = img.width;
-  c.height = img.height;
-  const ctx = c.getContext("2d");
-  ctx.drawImage(img, 0, 0);
-  const d = ctx.getImageData(0,0,c.width,c.height);
-  for (let i=0;i<d.data.length;i+=4) {
-    if (d.data[i+3] === 0) continue; // transparency protection
-    d.data[i] = d.data[i] * (bri.value/100);
-  }
-  ctx.putImageData(d,0,0);
-  zip.file(path, c.toDataURL("image/png").split(",")[1], {base64:true});
-  after.src = c.toDataURL();
-}
-
-function undo() {
-  if (!history.length) return;
-  zip.files = JSON.parse(history.pop());
-  loadPreview();
-}
-
-function resetAll() {
-  location.reload();
-}
-
-function savePreset() {
-  const p = {hex:hex.value,h:hue.value,s:sat.value,b:bri.value};
-  const id = Date.now();
-  localStorage.setItem(id, JSON.stringify(p));
-  presets.innerHTML += `<option value="${id}">${hex.value}</option>`;
-}
-
-function loadPreset() {
-  const p = JSON.parse(localStorage.getItem(presets.value));
-  hex.value = p.hex; hue.value=p.h; sat.value=p.s; bri.value=p.b;
-}
-
-async function download() {
-  const blob = await zip.generateAsync({type:"blob"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "Recolored.mcpack";
-  a.click();
-}
-</script>
+</main>
 </body>
 </html>
