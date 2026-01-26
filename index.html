@@ -1,238 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🍋 Lemon's Texture Pack Recolor Tool</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<title>Bedrock Texture Pack Recolor Tool</title>
 
-  <style>
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #0b0f1f, #05070f);
-      color: #ffffcc;
-      margin: 0;
-      padding: 20px;
-    }
+<!-- JSZip -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-    h1 {
-      text-align: center;
-      color: #fffacd;
-      text-shadow: 0 0 15px #ffff66, 0 0 30px #ffea00;
-      margin-bottom: 20px;
-    }
+<style>
+:root {
+  --glass: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.18);
+  --accent: #00ffd5;
+}
 
-    .container {
-      max-width: 1300px;
-      margin: auto;
-      background: rgba(10,10,30,0.92);
-      padding: 25px;
-      border-radius: 22px;
-      box-shadow: 0 0 35px rgba(255,255,102,0.35);
-      border: 2px solid #ffea00;
-    }
+* { box-sizing: border-box; font-family: Inter, sans-serif; }
 
-    .controls, .filters, .presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 12px;
-    }
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #0f2027, #000);
+  color: white;
+  overflow-x: hidden;
+}
 
-    input, select, button {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid #ffff66;
-      background: rgba(255,255,102,0.12);
-      color: #ffffcc;
-      font-weight: bold;
-      font-size: 13px;
-      transition: 0.25s;
-      outline: none;
-    }
+/* Animated tech background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0,255,213,.08) 1px, transparent 1px),
+    linear-gradient(rgba(0,255,213,.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: move 20s linear infinite;
+  z-index: -1;
+}
 
-    input[type="color"] {
-      width: 42px;
-      height: 42px;
-      padding: 3px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
+@keyframes move {
+  from { background-position: 0 0; }
+  to { background-position: 400px 400px; }
+}
 
-    button:hover, input:hover, select:hover {
-      background: rgba(255,255,102,0.25);
-      box-shadow: 0 0 12px rgba(255,255,102,0.6);
-    }
+header {
+  padding: 20px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 14px;
-    }
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+}
 
-    .item {
-      background: rgba(0,0,0,0.35);
-      border: 1px solid #ffff66;
-      border-radius: 14px;
-      padding: 8px;
-      text-align: center;
-      position: relative;
-    }
+/* Glass panels */
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+}
 
-    .item img {
-      width: 100%;
-      image-rendering: pixelated;
-      border-radius: 8px;
-      border: 1px solid #ffea00;
-    }
+button {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: linear-gradient(135deg, var(--accent), #00aaff);
+  border: none;
+  border-radius: 10px;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    .filename {
-      font-size: 11px;
-      margin-top: 5px;
-      word-break: break-all;
-    }
+input[type="file"],
+input[type="text"],
+input[type="color"],
+input[type="range"] {
+  width: 100%;
+  margin-top: 6px;
+}
 
-    .checkbox {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      transform: scale(1.2);
-      accent-color: #ffea00;
-    }
+.folder {
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.folder:hover { background: rgba(255,255,255,0.1); }
+.folder.active { background: rgba(0,255,213,0.25); }
 
-    .preview-label {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      font-size: 9px;
-      background: rgba(0,0,0,0.6);
-      padding: 2px 6px;
-      border-radius: 6px;
-      color: #ffea00;
-    }
-  </style>
+.preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.preview img {
+  width: 100%;
+  image-rendering: pixelated;
+  background: #111;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.small {
+  font-size: 12px;
+  opacity: 0.7;
+}
+</style>
 </head>
 
 <body>
-<h1>🍋 Lemon's Texture Pack Recolor Tool</h1>
+<header>🎨 Minecraft Bedrock Texture Pack Recolor Tool</header>
 
 <div class="container">
 
-  <div class="controls">
-    <input type="file" id="fileInput" accept=".zip,.mcpack">
-    <input type="color" id="colorPicker" value="#ffea00">
-    <input type="text" id="hexInput" value="#ffea00" placeholder="#ffea00">
+<!-- LEFT PANEL -->
+<div class="panel">
+  <input type="file" id="fileInput" accept=".zip,.mcpack">
 
-    <button id="selectAllBtn">Select All</button>
-    <button id="deselectAllBtn">Deselect All</button>
-    <button id="recolorBtn">Recolor Selected</button>
-    <button id="downloadBtn">Download ZIP</button>
+  <input type="text" id="search" placeholder="🔍 Search texture">
+
+  <h4>Folders</h4>
+  <div id="folders"></div>
+
+  <h4>Color</h4>
+  <input type="color" id="picker">
+  <input type="text" id="hex" placeholder="#00ffd5">
+
+  <label>Hue</label>
+  <input type="range" id="hue" min="-180" max="180" value="0">
+  <label>Saturation</label>
+  <input type="range" id="sat" min="0" max="200" value="100">
+  <label>Brightness</label>
+  <input type="range" id="bri" min="0" max="200" value="100">
+
+  <button onclick="applyRecolor()">Apply Recolor</button>
+  <button onclick="undo()">Undo</button>
+  <button onclick="resetAll()">Reset</button>
+
+  <button onclick="savePreset()">Save Preset</button>
+  <select id="presets" onchange="loadPreset()"></select>
+
+  <button onclick="download()">Download MCPACK</button>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="panel">
+  <h3>Live Preview</h3>
+  <div class="preview">
+    <div>
+      <div class="small">Before</div>
+      <img id="before">
+    </div>
+    <div>
+      <div class="small">After</div>
+      <img id="after">
+    </div>
   </div>
-
-  <div class="grid" id="previewGrid"></div>
+</div>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
 <script>
-const fileInput = document.getElementById('fileInput');
-const colorPicker = document.getElementById('colorPicker');
-const hexInput = document.getElementById('hexInput');
-const recolorBtn = document.getElementById('recolorBtn');
-const previewGrid = document.getElementById('previewGrid');
-const selectAllBtn = document.getElementById('selectAllBtn');
-const deselectAllBtn = document.getElementById('deselectAllBtn');
-const downloadBtn = document.getElementById('downloadBtn');
+let zip, files = [], history = [], currentFolder = "";
 
-let images = [];
-let zipFile = null;
-
-colorPicker.oninput = () => hexInput.value = colorPicker.value;
-hexInput.oninput = () => {
-  if (/^#?[0-9A-Fa-f]{6}$/.test(hexInput.value)) {
-    colorPicker.value = hexInput.value.startsWith('#') ? hexInput.value : '#' + hexInput.value;
-  }
+fileInput.onchange = async e => {
+  zip = await JSZip.loadAsync(e.target.files[0]);
+  files = Object.keys(zip.files).filter(f => f.endsWith(".png"));
+  renderFolders();
 };
 
-fileInput.addEventListener('change', async () => {
-  previewGrid.innerHTML = '';
-  images = [];
-  zipFile = await JSZip.loadAsync(fileInput.files[0]);
-
-  zipFile.forEach(async (path, entry) => {
-    if (entry.name.endsWith('.png')) {
-      const blob = await entry.async('blob');
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      img.onload = () => addPreview(img, entry.name);
-      img.src = url;
-      images.push({ name: entry.name, img });
-    }
+function renderFolders() {
+  const map = {};
+  files.forEach(f => {
+    const key = f.split("/")[0];
+    map[key] = true;
   });
-});
-
-function addPreview(img, name) {
-  const div = document.createElement('div');
-  div.className = 'item';
-
-  const cb = document.createElement('input');
-  cb.type = 'checkbox';
-  cb.checked = true;
-  cb.className = 'checkbox';
-
-  const image = document.createElement('img');
-  image.src = img.src;
-
-  const label = document.createElement('div');
-  label.className = 'filename';
-  label.textContent = name;
-
-  div.append(cb, image, label);
-  previewGrid.appendChild(div);
+  folders.innerHTML = Object.keys(map).map(f =>
+    `<div class="folder" onclick="selectFolder('${f}', this)">${f}</div>`
+  ).join("");
 }
 
-recolorBtn.onclick = () => {
-  document.querySelectorAll('.item').forEach(item => {
-    if (!item.querySelector('.checkbox').checked) return;
-    item.querySelector('img').src = recolor(item.querySelector('img'));
-  });
-};
+function selectFolder(f, el) {
+  document.querySelectorAll(".folder").forEach(x => x.classList.remove("active"));
+  el.classList.add("active");
+  currentFolder = f;
+  loadPreview();
+}
 
-function recolor(img) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = img.width;
-  canvas.height = img.height;
+async function loadPreview() {
+  const file = files.find(f => f.startsWith(currentFolder));
+  if (!file) return;
+  const blob = await zip.file(file).async("blob");
+  before.src = URL.createObjectURL(blob);
+  after.src = before.src;
+}
+
+function applyRecolor() {
+  history.push(JSON.stringify(zip.files));
+  files.forEach(async f => {
+    if (!f.startsWith(currentFolder)) return;
+    const img = new Image();
+    img.src = URL.createObjectURL(await zip.file(f).async("blob"));
+    img.onload = () => recolor(img, f);
+  });
+}
+
+function recolor(img, path) {
+  const c = document.createElement("canvas");
+  c.width = img.width;
+  c.height = img.height;
+  const ctx = c.getContext("2d");
   ctx.drawImage(img, 0, 0);
-
-  const data = ctx.getImageData(0,0,canvas.width,canvas.height);
-  const rgb = hexToRgb(colorPicker.value);
-
-  for (let i=0;i<data.data.length;i+=4) {
-    const b = (data.data[i]+data.data[i+1]+data.data[i+2])/3/255;
-    data.data[i]   = rgb.r * b;
-    data.data[i+1] = rgb.g * b;
-    data.data[i+2] = rgb.b * b;
+  const d = ctx.getImageData(0,0,c.width,c.height);
+  for (let i=0;i<d.data.length;i+=4) {
+    if (d.data[i+3] === 0) continue; // transparency protection
+    d.data[i] = d.data[i] * (bri.value/100);
   }
-
-  ctx.putImageData(data,0,0);
-  return canvas.toDataURL();
+  ctx.putImageData(d,0,0);
+  zip.file(path, c.toDataURL("image/png").split(",")[1], {base64:true});
+  after.src = c.toDataURL();
 }
 
-function hexToRgb(hex){
-  hex = hex.replace('#','');
-  const n = parseInt(hex,16);
-  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+function undo() {
+  if (!history.length) return;
+  zip.files = JSON.parse(history.pop());
+  loadPreview();
 }
 
-selectAllBtn.onclick = () =>
-  document.querySelectorAll('.checkbox').forEach(c=>c.checked=true);
+function resetAll() {
+  location.reload();
+}
 
-deselectAllBtn.onclick = () =>
-  document.querySelectorAll('.checkbox').forEach(c=>c.checked=false);
+function savePreset() {
+  const p = {hex:hex.value,h:hue.value,s:sat.value,b:bri.value};
+  const id = Date.now();
+  localStorage.setItem(id, JSON.stringify(p));
+  presets.innerHTML += `<option value="${id}">${hex.value}</option>`;
+}
+
+function loadPreset() {
+  const p = JSON.parse(localStorage.getItem(presets.value));
+  hex.value = p.hex; hue.value=p.h; sat.value=p.s; bri.value=p.b;
+}
+
+async function download() {
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Recolored.mcpack";
+  a.click();
+}
 </script>
 </body>
 </html>
