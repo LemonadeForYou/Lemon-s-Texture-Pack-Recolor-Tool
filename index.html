@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>🍋 Lemon's Texture Pack Recolor Tool</title>
@@ -19,7 +20,7 @@
       text-shadow: 0 0 15px #ffff66, 0 0 30px #ffea00;
     }
     .container {
-      max-width: 950px;
+      max-width: 1200px;
       margin: auto;
       background: rgba(10,10,30,0.95);
       padding: 25px;
@@ -27,44 +28,48 @@
       box-shadow: 0 0 30px #ffff66;
       border: 2px solid #ffea00;
     }
-    .controls {
+    .controls, .filters {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 25px;
+      margin-bottom: 15px;
       align-items: center;
       justify-content: center;
     }
-    input[type="file"], input[type="text"], button {
-      padding: 12px;
+    input[type="file"], input[type="text"], input[type="color"], input[type="range"], select, button {
+      padding: 10px;
       border-radius: 12px;
       border: 1px solid #ffff66;
       background: rgba(255,255,102,0.1);
       color: #ffff66;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 13px;
       transition: 0.3s;
     }
     input[type="text"] {
-      width: 120px;
+      width: 110px;
       text-align: center;
     }
-    button:hover, input[type="file"]:hover, input[type="text"]:hover {
+    input[type="range"] {
+      width: 120px;
+    }
+    button:hover, input:hover, select:hover {
       background: rgba(255,255,102,0.3);
       box-shadow: 0 0 10px #ffff66, 0 0 20px #ffea00;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 15px;
     }
     .item {
       background: rgba(0,0,0,0.3);
       border: 1px solid #ffff66;
       border-radius: 12px;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
       backdrop-filter: blur(5px);
+      position: relative;
     }
     .item img {
       width: 100%;
@@ -73,13 +78,20 @@
       border: 1px solid #ffea00;
     }
     .filename {
-      font-size: 12px;
-      margin-top: 6px;
+      font-size: 11px;
+      margin-top: 5px;
       word-break: break-all;
       color: #ffff99;
     }
+    .checkbox {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      transform: scale(1.2);
+      accent-color: #ffea00;
+    }
     .footer {
-      margin-top: 30px;
+      margin-top: 25px;
       text-align: center;
       font-size: 12px;
       color: #ffff66;
@@ -90,28 +102,78 @@
 <body>
   <h1>🍋 Lemon's Texture Pack Recolor Tool</h1>
   <div class="container">
+
+    <!-- MAIN CONTROLS -->
     <div class="controls">
       <input type="file" id="fileInput" accept=".zip,.mcpack" multiple />
-      <input type="text" id="hexInput" placeholder="#ffea00" />
-      <button id="recolorBtn">Recolor Pack</button>
+      <input type="color" id="colorPicker" value="#ffea00">
+      <input type="text" id="hexInput" placeholder="#ffea00" value="#ffea00" />
+      <label>Hue <input type="range" id="hueSlider" min="0" max="360" value="0"></label>
+      <label>Sat <input type="range" id="satSlider" min="0" max="200" value="100"></label>
+      <button id="selectAllBtn">Select All</button>
+      <button id="deselectAllBtn">Deselect All</button>
+      <button id="recolorBtn">Recolor Selected</button>
       <button id="downloadBtn">Download Recolored ZIP</button>
-    </div><div class="grid" id="previewGrid"></div>
+    </div>
 
-<div class="footer">
-  Upload your Minecraft Bedrock texture pack (.zip or .mcpack), type a hex code, and recolor all textures at once.
-  <br>Futuristic lemon-themed UI for maximum citrus vibes! 🍋
-</div>
+    <!-- FILTER BAR -->
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="Search textures..." />
+      <select id="folderFilter">
+        <option value="all">All Folders</option>
+        <option value="blocks">blocks</option>
+        <option value="items">items</option>
+        <option value="entity">entity</option>
+        <option value="gui">gui</option>
+        <option value="environment">environment</option>
+        <option value="models">models</option>
+        <option value="painting">painting</option>
+        <option value="particle">particle</option>
+        <option value="particles">particles</option>
+        <option value="map">map</option>
+        <option value="misc">misc</option>
+        <option value="ui">ui</option>
+        <option value="trims">trims</option>
+        <option value="colormap">colormap</option>
+        <option value="persona_thumbnails">persona_thumbnails</option>
+      </select>
+    </div>
 
-  </div>  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>  <script>
+    <div class="grid" id="previewGrid"></div>
+
+    <div class="footer">
+      Upload your Minecraft Bedrock texture pack (.zip or .mcpack), select which textures to recolor, pick a color or enter hex, and download your custom pack.
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
     const fileInput = document.getElementById('fileInput');
     const hexInput = document.getElementById('hexInput');
+    const colorPicker = document.getElementById('colorPicker');
+    const hueSlider = document.getElementById('hueSlider');
+    const satSlider = document.getElementById('satSlider');
     const recolorBtn = document.getElementById('recolorBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const previewGrid = document.getElementById('previewGrid');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const searchInput = document.getElementById('searchInput');
+    const folderFilter = document.getElementById('folderFilter');
 
     let originalImages = [];
     let recoloredImages = [];
     let originalZip = null;
+
+    // Sync color picker and hex input
+    colorPicker.addEventListener('input', () => {
+      hexInput.value = colorPicker.value;
+    });
+    hexInput.addEventListener('input', () => {
+      if (/^#?[0-9A-Fa-f]{6}$/.test(hexInput.value)) {
+        colorPicker.value = hexInput.value.startsWith('#') ? hexInput.value : '#' + hexInput.value;
+      }
+    });
 
     fileInput.addEventListener('change', async () => {
       originalImages = [];
@@ -122,6 +184,7 @@
       for (const file of files) {
         const zip = await JSZip.loadAsync(file);
         originalZip = zip;
+
         zip.forEach(async (relativePath, zipEntry) => {
           if (zipEntry.name.endsWith('.png')) {
             const blob = await zipEntry.async('blob');
@@ -142,11 +205,22 @@
       const hex = hexInput.value.trim();
       if (!/^#?[0-9A-Fa-f]{6}$/.test(hex)) return alert('Enter a valid hex code like #ffea00');
       const rgb = hexToRgb(hex);
+      const hue = parseInt(hueSlider.value);
+      const sat = parseInt(satSlider.value);
 
       recoloredImages = [];
       previewGrid.innerHTML = '';
 
       originalImages.forEach(({ name, img }) => {
+        const checkbox = document.querySelector(`input[data-name="${CSS.escape(name)}"]`);
+        const isChecked = checkbox?.checked;
+
+        if (!isChecked) {
+          recoloredImages.push({ name, dataURL: img.src });
+          addPreviewFromURL(img.src, name, false);
+          return;
+        }
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = img.width;
@@ -159,15 +233,30 @@
         for (let i = 0; i < data.length; i += 4) {
           const alpha = data[i + 3];
           if (alpha === 0) continue;
-          const brightness = (data[i] + data[i+1] + data[i+2]) / 3 / 255;
-          data[i] = rgb.r * brightness;
-          data[i+1] = rgb.g * brightness;
-          data[i+2] = rgb.b * brightness;
+
+          let r = data[i], g = data[i+1], b = data[i+2];
+
+          // Apply base recolor using brightness
+          const brightness = (r + g + b) / 3 / 255;
+          r = rgb.r * brightness;
+          g = rgb.g * brightness;
+          b = rgb.b * brightness;
+
+          // Convert to HSL for hue/saturation adjustment
+          let [h, s, l] = rgbToHsl(r, g, b);
+          h = (h + hue) % 360;
+          s = Math.min(1, s * (sat / 100));
+          const [nr, ng, nb] = hslToRgb(h, s, l);
+
+          data[i] = nr;
+          data[i+1] = ng;
+          data[i+2] = nb;
         }
+
         ctx.putImageData(imageData, 0, 0);
         const dataURL = canvas.toDataURL('image/png');
         recoloredImages.push({ name, dataURL });
-        addPreviewFromURL(dataURL, name);
+        addPreviewFromURL(dataURL, name, true);
       });
     });
 
@@ -177,7 +266,6 @@
 
       const newZip = new JSZip();
 
-      // Copy all original files
       const entries = Object.values(originalZip.files);
       for (const entry of entries) {
         if (!entry.dir) {
@@ -186,7 +274,6 @@
         }
       }
 
-      // Replace PNGs with recolored versions
       recoloredImages.forEach(({ name, dataURL }) => {
         const base64 = dataURL.split(',')[1];
         newZip.file(name, base64, { base64: true });
@@ -201,27 +288,72 @@
       document.body.removeChild(a);
     });
 
+    selectAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.checkbox').forEach(cb => cb.checked = true);
+    });
+
+    deselectAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.checkbox').forEach(cb => cb.checked = false);
+    });
+
+    searchInput.addEventListener('input', applyFilters);
+    folderFilter.addEventListener('change', applyFilters);
+
+    function applyFilters() {
+      const search = searchInput.value.toLowerCase();
+      const folder = folderFilter.value;
+
+      document.querySelectorAll('.item').forEach(item => {
+        const name = item.dataset.name.toLowerCase();
+        const folderMatch = folder === 'all' || name.includes(`/${folder}/`) || name.startsWith(`${folder}/`);
+        const searchMatch = name.includes(search);
+        item.style.display = folderMatch && searchMatch ? '' : 'none';
+      });
+    }
+
     function addPreview(img, name) {
       const div = document.createElement('div');
       div.className = 'item';
+      div.dataset.name = name;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'checkbox';
+      checkbox.checked = true;
+      checkbox.dataset.name = name;
+
       const imageEl = document.createElement('img');
       imageEl.src = img.src;
+
       const label = document.createElement('div');
       label.className = 'filename';
       label.textContent = name;
+
+      div.appendChild(checkbox);
       div.appendChild(imageEl);
       div.appendChild(label);
       previewGrid.appendChild(div);
     }
 
-    function addPreviewFromURL(url, name) {
+    function addPreviewFromURL(url, name, recolored) {
       const div = document.createElement('div');
       div.className = 'item';
+      div.dataset.name = name;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'checkbox';
+      checkbox.checked = recolored;
+      checkbox.dataset.name = name;
+
       const imageEl = document.createElement('img');
       imageEl.src = url;
+
       const label = document.createElement('div');
       label.className = 'filename';
       label.textContent = name;
+
+      div.appendChild(checkbox);
       div.appendChild(imageEl);
       div.appendChild(label);
       previewGrid.appendChild(div);
@@ -232,5 +364,51 @@
       const bigint = parseInt(hex, 16);
       return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
     }
-  </script></body>
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h *= 60;
+      }
+      return [h, s, l];
+    }
+
+    function hslToRgb(h, s, l) {
+      let r, g, b;
+
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h / 360 + 1/3);
+        g = hue2rgb(p, q, h / 360);
+        b = hue2rgb(p, q, h / 360 - 1/3);
+      }
+
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+  </script>
+</body>
 </html>
