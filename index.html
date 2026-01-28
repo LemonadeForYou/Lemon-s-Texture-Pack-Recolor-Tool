@@ -1,138 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🍋 Lemon's Texture Pack Recolor Tool</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<title>🍋 Lemon's Texture Pack Recolor Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #0b0f1f, #05070f);
-      color: #ffffcc;
-      margin: 0;
-      padding: 20px;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
-    h1 {
-      text-align: center;
-      color: #fffacd;
-      text-shadow: 0 0 15px #ffff66, 0 0 30px #ffea00;
-      margin-bottom: 20px;
-    }
+<style>
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(135deg, #0b0f1f, #05070f);
+  color: #ffffcc;
+  margin: 0;
+  padding: 20px;
+}
 
-    .container {
-      max-width: 1300px;
-      margin: auto;
-      background: rgba(10,10,30,0.92);
-      padding: 25px;
-      border-radius: 22px;
-      box-shadow: 0 0 35px rgba(255,255,102,0.35);
-      border: 2px solid #ffea00;
-    }
+h1 {
+  text-align: center;
+  color: #fffacd;
+  text-shadow: 0 0 15px #ffff66, 0 0 30px #ffea00;
+}
 
-    .controls, .filters, .presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 12px;
-    }
+.container {
+  max-width: 1300px;
+  margin: auto;
+  background: rgba(10,10,30,0.92);
+  padding: 25px;
+  border-radius: 22px;
+  border: 2px solid #ffea00;
+  box-shadow: 0 0 35px rgba(255,255,102,0.35);
+}
 
-    input, select, button {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid #ffff66;
-      background: rgba(255,255,102,0.12);
-      color: #ffffcc;
-      font-weight: bold;
-      font-size: 13px;
-      transition: 0.25s;
-      outline: none;
-    }
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
 
-    input[type="color"] {
-      width: 42px;
-      height: 42px;
-      padding: 3px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
+input, button {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #ffff66;
+  background: rgba(255,255,102,0.12);
+  color: #ffffcc;
+  font-weight: bold;
+  transition: 0.2s;
+}
 
-    button:hover, input:hover, select:hover {
-      background: rgba(255,255,102,0.25);
-      box-shadow: 0 0 12px rgba(255,255,102,0.6);
-    }
+input[type="color"] {
+  width: 42px;
+  height: 42px;
+  padding: 3px;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 14px;
-    }
+button:hover, input:hover {
+  background: rgba(255,255,102,0.25);
+  box-shadow: 0 0 12px rgba(255,255,102,0.6);
+}
 
-    .item {
-      background: rgba(0,0,0,0.35);
-      border: 1px solid #ffff66;
-      border-radius: 14px;
-      padding: 8px;
-      text-align: center;
-      position: relative;
-    }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
 
-    .item img {
-      width: 100%;
-      image-rendering: pixelated;
-      border-radius: 8px;
-      border: 1px solid #ffea00;
-    }
+.item {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid #ffff66;
+  border-radius: 14px;
+  padding: 8px;
+  position: relative;
+}
 
-    .filename {
-      font-size: 11px;
-      margin-top: 5px;
-      word-break: break-all;
-    }
+.item img {
+  width: 100%;
+  image-rendering: pixelated;
+  border-radius: 8px;
+  border: 1px solid #ffea00;
+}
 
-    .checkbox {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      transform: scale(1.2);
-      accent-color: #ffea00;
-    }
+.filename {
+  font-size: 11px;
+  margin-top: 5px;
+  word-break: break-all;
+}
 
-    .preview-label {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      font-size: 9px;
-      background: rgba(0,0,0,0.6);
-      padding: 2px 6px;
-      border-radius: 6px;
-      color: #ffea00;
-    }
-  </style>
+.checkbox {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  transform: scale(1.2);
+  accent-color: #ffea00;
+}
+</style>
 </head>
 
 <body>
 <h1>🍋 Lemon's Texture Pack Recolor Tool</h1>
 
 <div class="container">
-
   <div class="controls">
     <input type="file" id="fileInput" accept=".zip,.mcpack">
     <input type="color" id="colorPicker" value="#ffea00">
-    <input type="text" id="hexInput" value="#ffea00" placeholder="#ffea00">
-
-    <button id="selectAllBtn">Select All</button>
-    <button id="deselectAllBtn">Deselect All</button>
-    <button id="recolorBtn">Recolor Selected</button>
-    <button id="downloadBtn">Download ZIP</button>
+    <input type="text" id="hexInput" value="#ffea00">
+    <button id="selectAll">Select All</button>
+    <button id="deselectAll">Deselect All</button>
+    <button id="recolor">Recolor</button>
   </div>
 
-  <div class="grid" id="previewGrid"></div>
-
+  <div class="grid" id="grid"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -141,40 +120,47 @@
 const fileInput = document.getElementById('fileInput');
 const colorPicker = document.getElementById('colorPicker');
 const hexInput = document.getElementById('hexInput');
-const recolorBtn = document.getElementById('recolorBtn');
-const previewGrid = document.getElementById('previewGrid');
-const selectAllBtn = document.getElementById('selectAllBtn');
-const deselectAllBtn = document.getElementById('deselectAllBtn');
-const downloadBtn = document.getElementById('downloadBtn');
+const grid = document.getElementById('grid');
 
-let images = [];
-let zipFile = null;
+let textures = [];
 
 colorPicker.oninput = () => hexInput.value = colorPicker.value;
 hexInput.oninput = () => {
-  if (/^#?[0-9A-Fa-f]{6}$/.test(hexInput.value)) {
-    colorPicker.value = hexInput.value.startsWith('#') ? hexInput.value : '#' + hexInput.value;
+  if(/^#?[0-9a-fA-F]{6}$/.test(hexInput.value)){
+    colorPicker.value = hexInput.value.startsWith('#') ? hexInput.value : '#'+hexInput.value;
   }
 };
 
 fileInput.addEventListener('change', async () => {
-  previewGrid.innerHTML = '';
-  images = [];
-  zipFile = await JSZip.loadAsync(fileInput.files[0]);
+  grid.innerHTML = '';
+  textures = [];
 
-  zipFile.forEach(async (path, entry) => {
-    if (entry.name.endsWith('.png')) {
-      const blob = await entry.async('blob');
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      img.onload = () => addPreview(img, entry.name);
-      img.src = url;
-      images.push({ name: entry.name, img });
-    }
-  });
+  const zip = await JSZip.loadAsync(fileInput.files[0]);
+  const entries = Object.values(zip.files).filter(f => f.name.endsWith('.png'));
+
+  const fragment = document.createDocumentFragment();
+
+  for (const entry of entries) {
+    const blob = await entry.async('blob');
+    const bitmap = await createImageBitmap(blob);
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    ctx.drawImage(bitmap,0,0);
+
+    const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    textures.push({ imageData });
+
+    fragment.appendChild(createItem(canvas.toDataURL(), entry.name));
+    await new Promise(r => requestAnimationFrame(r)); // smooth
+  }
+
+  grid.appendChild(fragment);
 });
 
-function addPreview(img, name) {
+function createItem(src, name){
   const div = document.createElement('div');
   div.className = 'item';
 
@@ -183,56 +169,56 @@ function addPreview(img, name) {
   cb.checked = true;
   cb.className = 'checkbox';
 
-  const image = document.createElement('img');
-  image.src = img.src;
+  const img = document.createElement('img');
+  img.loading = 'lazy';
+  img.src = src;
 
   const label = document.createElement('div');
   label.className = 'filename';
   label.textContent = name;
 
-  div.append(cb, image, label);
-  previewGrid.appendChild(div);
+  div.append(cb, img, label);
+  return div;
 }
 
-recolorBtn.onclick = () => {
-  document.querySelectorAll('.item').forEach(item => {
-    if (!item.querySelector('.checkbox').checked) return;
-    item.querySelector('img').src = recolor(item.querySelector('img'));
+document.getElementById('recolor').onclick = () => {
+  const rgb = hexToRgb(colorPicker.value);
+  document.querySelectorAll('.item').forEach((item,i)=>{
+    if(!item.querySelector('.checkbox').checked) return;
+
+    const srcData = textures[i].imageData;
+    const data = new ImageData(
+      new Uint8ClampedArray(srcData.data),
+      srcData.width,
+      srcData.height
+    );
+
+    for(let p=0;p<data.data.length;p+=4){
+      const b=(data.data[p]+data.data[p+1]+data.data[p+2])/3/255;
+      data.data[p]=rgb.r*b;
+      data.data[p+1]=rgb.g*b;
+      data.data[p+2]=rgb.b*b;
+    }
+
+    const c=document.createElement('canvas');
+    c.width=data.width;
+    c.height=data.height;
+    c.getContext('2d').putImageData(data,0,0);
+    item.querySelector('img').src=c.toDataURL();
   });
 };
 
-function recolor(img) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = img.width;
-  canvas.height = img.height;
-  ctx.drawImage(img, 0, 0);
-
-  const data = ctx.getImageData(0,0,canvas.width,canvas.height);
-  const rgb = hexToRgb(colorPicker.value);
-
-  for (let i=0;i<data.data.length;i+=4) {
-    const b = (data.data[i]+data.data[i+1]+data.data[i+2])/3/255;
-    data.data[i]   = rgb.r * b;
-    data.data[i+1] = rgb.g * b;
-    data.data[i+2] = rgb.b * b;
-  }
-
-  ctx.putImageData(data,0,0);
-  return canvas.toDataURL();
-}
-
-function hexToRgb(hex){
-  hex = hex.replace('#','');
-  const n = parseInt(hex,16);
-  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
-}
-
-selectAllBtn.onclick = () =>
+document.getElementById('selectAll').onclick = () =>
   document.querySelectorAll('.checkbox').forEach(c=>c.checked=true);
 
-deselectAllBtn.onclick = () =>
+document.getElementById('deselectAll').onclick = () =>
   document.querySelectorAll('.checkbox').forEach(c=>c.checked=false);
+
+function hexToRgb(hex){
+  hex=hex.replace('#','');
+  const n=parseInt(hex,16);
+  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+}
 </script>
 </body>
 </html>
