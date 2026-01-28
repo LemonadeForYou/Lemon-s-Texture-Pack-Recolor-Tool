@@ -1,9 +1,12 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>🍋 Futuristic Lemon Texture Pack Recolor Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     body {
       font-family: 'Orbitron', sans-serif;
@@ -32,10 +35,9 @@
       flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 25px;
-      align-items: center;
       justify-content: center;
     }
-    input[type="file"], input[type="text"], button {
+    input, button {
       padding: 12px;
       border-radius: 12px;
       border: 1px solid #ffff66;
@@ -49,7 +51,7 @@
       width: 120px;
       text-align: center;
     }
-    button:hover, input[type="file"]:hover, input[type="text"]:hover {
+    button:hover, input:hover {
       background: rgba(255,255,102,0.3);
       box-shadow: 0 0 10px #ffff66, 0 0 20px #ffea00;
     }
@@ -64,7 +66,6 @@
       border-radius: 12px;
       padding: 10px;
       text-align: center;
-      backdrop-filter: blur(5px);
     }
     .item img {
       width: 100%;
@@ -95,14 +96,17 @@
       <input type="text" id="hexInput" placeholder="#ffea00" />
       <button id="recolorBtn">Recolor Pack</button>
       <button id="downloadBtn">Download Recolored ZIP</button>
-    </div><div class="grid" id="previewGrid"></div>
+    </div>
 
-<div class="footer">
-  Upload your Minecraft Bedrock texture pack (.zip or .mcpack), type a hex code, and recolor all textures at once.
-  <br>Futuristic lemon-themed UI for maximum citrus vibes! 🍋
-</div>
+    <div class="grid" id="previewGrid"></div>
 
-  </div>  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>  <script>
+    <div class="footer">
+      Upload your Minecraft Bedrock texture pack (.zip or .mcpack), type a hex code, and recolor all textures at once.
+      <br>Futuristic lemon-themed UI for maximum citrus vibes! 🍋
+    </div>
+  </div>
+
+  <script>
     const fileInput = document.getElementById('fileInput');
     const hexInput = document.getElementById('hexInput');
     const recolorBtn = document.getElementById('recolorBtn');
@@ -118,29 +122,48 @@
       previewGrid.innerHTML = '';
 
       const files = Array.from(fileInput.files);
+      if (files.length === 0) return;
+
       for (const file of files) {
         const zip = await JSZip.loadAsync(file);
-        zip.forEach(async (relativePath, zipEntry) => {
-          if (zipEntry.name.endsWith('.png')) {
-            const blob = await zipEntry.async('blob');
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => {
-              originalImages.push({ name: zipEntry.name, img });
-              addPreview(img, zipEntry.name);
-            };
-            img.src = url;
+        const promises = [];
+
+        zip.forEach((relativePath, zipEntry) => {
+          if (zipEntry.name.toLowerCase().endsWith('.png')) {
+            promises.push(
+              zipEntry.async('blob').then(blob => {
+                return new Promise(resolve => {
+                  const url = URL.createObjectURL(blob);
+                  const img = new Image();
+                  img.onload = () => {
+                    originalImages.push({ name: zipEntry.name, img });
+                    addPreview(img.src, zipEntry.name);
+                    resolve();
+                  };
+                  img.src = url;
+                });
+              })
+            );
           }
         });
+
+        await Promise.all(promises);
       }
     });
 
     recolorBtn.addEventListener('click', () => {
-      if (originalImages.length === 0) return alert('Upload a pack first!');
-      const hex = hexInput.value.trim();
-      if (!/^#?[0-9A-Fa-f]{6}$/.test(hex)) return alert('Enter a valid hex code like #ffea00');
-      const rgb = hexToRgb(hex);
+      if (originalImages.length === 0) {
+        alert('Upload a pack first!');
+        return;
+      }
 
+      const hex = hexInput.value.trim();
+      if (!/^#?[0-9A-Fa-f]{6}$/.test(hex)) {
+        alert('Enter a valid hex code like #ffea00');
+        return;
+      }
+
+      const rgb = hexToRgb(hex);
       recoloredImages = [];
       previewGrid.innerHTML = '';
 
@@ -155,54 +178,44 @@
         const data = imageData.data;
 
         for (let i = 0; i < data.length; i += 4) {
-          const alpha = data[i + 3];
-          if (alpha === 0) continue;
-          const brightness = (data[i] + data[i+1] + data[i+2]) / 3 / 255;
+          if (data[i + 3] === 0) continue;
+          const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3 / 255;
           data[i] = rgb.r * brightness;
-          data[i+1] = rgb.g * brightness;
-          data[i+2] = rgb.b * brightness;
+          data[i + 1] = rgb.g * brightness;
+          data[i + 2] = rgb.b * brightness;
         }
+
         ctx.putImageData(imageData, 0, 0);
         const dataURL = canvas.toDataURL('image/png');
         recoloredImages.push({ name, dataURL });
-        addPreviewFromURL(dataURL, name);
+        addPreview(dataURL, name);
       });
     });
 
     downloadBtn.addEventListener('click', async () => {
-      if (recoloredImages.length === 0) return alert('Recolor first!');
+      if (recoloredImages.length === 0) {
+        alert('Recolor first!');
+        return;
+      }
+
       const zip = new JSZip();
       recoloredImages.forEach(({ name, dataURL }) => {
         const base64 = dataURL.split(',')[1];
         zip.file(name, base64, { base64: true });
       });
+
       const content = await zip.generateAsync({ type: 'blob' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(content);
       a.download = 'recolored_pack.zip';
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
     });
 
-    function addPreview(img, name) {
+    function addPreview(src, name) {
       const div = document.createElement('div');
       div.className = 'item';
       const imageEl = document.createElement('img');
-      imageEl.src = img.src;
-      const label = document.createElement('div');
-      label.className = 'filename';
-      label.textContent = name;
-      div.appendChild(imageEl);
-      div.appendChild(label);
-      previewGrid.appendChild(div);
-    }
-
-    function addPreviewFromURL(url, name) {
-      const div = document.createElement('div');
-      div.className = 'item';
-      const imageEl = document.createElement('img');
-      imageEl.src = url;
+      imageEl.src = src;
       const label = document.createElement('div');
       label.className = 'filename';
       label.textContent = name;
@@ -212,9 +225,14 @@
     }
 
     function hexToRgb(hex) {
-      hex = hex.replace('#','');
+      hex = hex.replace('#', '');
       const bigint = parseInt(hex, 16);
-      return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      };
     }
-  </script></body>
+  </script>
+</body>
 </html>
